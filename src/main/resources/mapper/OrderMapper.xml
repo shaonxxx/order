@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.woniu.woniuticket.order.dao.OrderMapper">
+  <resultMap id="BaseResultMap" type="com.woniu.woniuticket.order.pojo.Order">
+    <id column="order_id" jdbcType="INTEGER" property="orderId" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="chip_id" jdbcType="INTEGER" property="chipId" />
+    <result column="pipe_num" jdbcType="VARCHAR" property="pipeNum" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="seat" jdbcType="VARCHAR" property="seat" />
+    <result column="proof" jdbcType="VARCHAR" property="proof" />
+    <result column="total_price" jdbcType="DECIMAL" property="totalPrice" />
+    <result column="order_num" jdbcType="VARCHAR" property="orderNum" />
+    <result column="order_state" jdbcType="INTEGER" property="orderState" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.woniu.woniuticket.order.pojo.Order">
+    <result column="order_qrcode" jdbcType="LONGVARCHAR" property="orderQrcode" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    order_id, user_id, chip_id, pipe_num, create_time, seat, proof, total_price, order_num, 
+    order_state
+  </sql>
+  <sql id="Blob_Column_List">
+    order_qrcode
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from order
+    where order_id = #{orderId,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from order
+    where order_id = #{orderId,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.woniu.woniuticket.order.pojo.Order">
+    insert into order (order_id, user_id, chip_id, 
+      pipe_num, create_time, seat, 
+      proof, total_price, order_num, 
+      order_state, order_qrcode)
+    values (#{orderId,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{chipId,jdbcType=INTEGER}, 
+      #{pipeNum,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{seat,jdbcType=VARCHAR}, 
+      #{proof,jdbcType=VARCHAR}, #{totalPrice,jdbcType=DECIMAL}, #{orderNum,jdbcType=VARCHAR}, 
+      #{orderState,jdbcType=INTEGER}, #{orderQrcode,jdbcType=LONGVARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.woniu.woniuticket.order.pojo.Order">
+    insert into order
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="orderId != null">
+        order_id,
+      </if>
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="chipId != null">
+        chip_id,
+      </if>
+      <if test="pipeNum != null">
+        pipe_num,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="seat != null">
+        seat,
+      </if>
+      <if test="proof != null">
+        proof,
+      </if>
+      <if test="totalPrice != null">
+        total_price,
+      </if>
+      <if test="orderNum != null">
+        order_num,
+      </if>
+      <if test="orderState != null">
+        order_state,
+      </if>
+      <if test="orderQrcode != null">
+        order_qrcode,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="orderId != null">
+        #{orderId,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null">
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="chipId != null">
+        #{chipId,jdbcType=INTEGER},
+      </if>
+      <if test="pipeNum != null">
+        #{pipeNum,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="seat != null">
+        #{seat,jdbcType=VARCHAR},
+      </if>
+      <if test="proof != null">
+        #{proof,jdbcType=VARCHAR},
+      </if>
+      <if test="totalPrice != null">
+        #{totalPrice,jdbcType=DECIMAL},
+      </if>
+      <if test="orderNum != null">
+        #{orderNum,jdbcType=VARCHAR},
+      </if>
+      <if test="orderState != null">
+        #{orderState,jdbcType=INTEGER},
+      </if>
+      <if test="orderQrcode != null">
+        #{orderQrcode,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.woniu.woniuticket.order.pojo.Order">
+    update order
+    <set>
+      <if test="userId != null">
+        user_id = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="chipId != null">
+        chip_id = #{chipId,jdbcType=INTEGER},
+      </if>
+      <if test="pipeNum != null">
+        pipe_num = #{pipeNum,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="seat != null">
+        seat = #{seat,jdbcType=VARCHAR},
+      </if>
+      <if test="proof != null">
+        proof = #{proof,jdbcType=VARCHAR},
+      </if>
+      <if test="totalPrice != null">
+        total_price = #{totalPrice,jdbcType=DECIMAL},
+      </if>
+      <if test="orderNum != null">
+        order_num = #{orderNum,jdbcType=VARCHAR},
+      </if>
+      <if test="orderState != null">
+        order_state = #{orderState,jdbcType=INTEGER},
+      </if>
+      <if test="orderQrcode != null">
+        order_qrcode = #{orderQrcode,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where order_id = #{orderId,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.woniu.woniuticket.order.pojo.Order">
+    update order
+    set user_id = #{userId,jdbcType=INTEGER},
+      chip_id = #{chipId,jdbcType=INTEGER},
+      pipe_num = #{pipeNum,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      seat = #{seat,jdbcType=VARCHAR},
+      proof = #{proof,jdbcType=VARCHAR},
+      total_price = #{totalPrice,jdbcType=DECIMAL},
+      order_num = #{orderNum,jdbcType=VARCHAR},
+      order_state = #{orderState,jdbcType=INTEGER},
+      order_qrcode = #{orderQrcode,jdbcType=LONGVARCHAR}
+    where order_id = #{orderId,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.woniu.woniuticket.order.pojo.Order">
+    update order
+    set user_id = #{userId,jdbcType=INTEGER},
+      chip_id = #{chipId,jdbcType=INTEGER},
+      pipe_num = #{pipeNum,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      seat = #{seat,jdbcType=VARCHAR},
+      proof = #{proof,jdbcType=VARCHAR},
+      total_price = #{totalPrice,jdbcType=DECIMAL},
+      order_num = #{orderNum,jdbcType=VARCHAR},
+      order_state = #{orderState,jdbcType=INTEGER}
+    where order_id = #{orderId,jdbcType=INTEGER}
+  </update>
+</mapper>

@@ -1,0 +1,46 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+spring:
+  mvc:
+    date-format: yyyy-MM-dd HH:mm:ss
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  #JDBC参数
+  datasource:
+    url: jdbc:mysql://106.52.231.180:3306/cinema?serverTimezone=GMT%2B8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123
+    #druid连接池配置
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      max-active: 100
+      max-wait: 1000
+      test-on-borrow: false
+      test-on-return: false
+      test-while-idle: true
+      #设置过滤器，stat用于接收状态，wall用于防止SQL注入,logback则说明使用logback日志输出
+      filters: stat,wall,logback
+      #统计所有数据源状态
+      use-global-data-source-stat: true
+      #sql合并统计，与设置慢SQL时间为1000毫秒
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=1000
+  #thymeleaf缓存
+  thymeleaf:
+    cache: false
+#mybatis映射文件配置
+mybatis:
+  mapper-locations: /mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+#logback日志
+logging:
+  level.com.woniu.dao: debug
+#pagehelper配置
+pagehelper:
+  helper-dialect: mysql
+  support-methods-arguments: true
+  params: pageNum=currentPage,pageSize=pageSize
