@@ -25,15 +25,6 @@
             enableCountByExample="false"
             selectByExampleQueryId="false">
         </table>
-        <table tableName="screening" mapperName="ScreeningMapper" domainObjectName="Screening"
-               enableDeleteByExample="false"
-               enableUpdateByExample="false"
-               enableSelectByExample="false"
-               enableCountByExample="false"
-               selectByExampleQueryId="false">
-        </table>
-
-       
 
     </context>
 </generatorConfiguration>

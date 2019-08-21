@@ -1,10 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.woniu.woniuticket.order.dao.OrderMapper">
+  <!--分页查询-->
+  <select id="selectAllOrders" resultMap="BaseResultMap">
+    select * from order
+    <!--<where>
+      <if test="condition != null and ''!=condition">
+        stdnum like concat('%',#{condition},'%') or zhname like concat('%',#{condition},'%')
+      </if>
+    </where>-->
+  </select>
+
+
+
+
+
+
+
+
+
+
+
   <resultMap id="BaseResultMap" type="com.woniu.woniuticket.order.pojo.Order">
     <id column="order_id" jdbcType="INTEGER" property="orderId" />
     <result column="user_id" jdbcType="INTEGER" property="userId" />
     <result column="chip_id" jdbcType="INTEGER" property="chipId" />
+    <result column="film_num" jdbcType="INTEGER" property="filmNum" />
     <result column="pipe_num" jdbcType="VARCHAR" property="pipeNum" />
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
     <result column="seat" jdbcType="VARCHAR" property="seat" />
@@ -17,8 +38,8 @@
     <result column="order_qrcode" jdbcType="LONGVARCHAR" property="orderQrcode" />
   </resultMap>
   <sql id="Base_Column_List">
-    order_id, user_id, chip_id, pipe_num, create_time, seat, proof, total_price, order_num, 
-    order_state
+    order_id, user_id, chip_id, film_num, pipe_num, create_time, seat, proof, total_price, 
+    order_num, order_state
   </sql>
   <sql id="Blob_Column_List">
     order_qrcode
@@ -37,13 +58,15 @@
   </delete>
   <insert id="insert" parameterType="com.woniu.woniuticket.order.pojo.Order">
     insert into order (order_id, user_id, chip_id, 
-      pipe_num, create_time, seat, 
-      proof, total_price, order_num, 
-      order_state, order_qrcode)
+      film_num, pipe_num, create_time, 
+      seat, proof, total_price, 
+      order_num, order_state, order_qrcode
+      )
     values (#{orderId,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{chipId,jdbcType=INTEGER}, 
-      #{pipeNum,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{seat,jdbcType=VARCHAR}, 
-      #{proof,jdbcType=VARCHAR}, #{totalPrice,jdbcType=DECIMAL}, #{orderNum,jdbcType=VARCHAR}, 
-      #{orderState,jdbcType=INTEGER}, #{orderQrcode,jdbcType=LONGVARCHAR})
+      #{filmNum,jdbcType=INTEGER}, #{pipeNum,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{seat,jdbcType=VARCHAR}, #{proof,jdbcType=VARCHAR}, #{totalPrice,jdbcType=DECIMAL}, 
+      #{orderNum,jdbcType=VARCHAR}, #{orderState,jdbcType=INTEGER}, #{orderQrcode,jdbcType=LONGVARCHAR}
+      )
   </insert>
   <insert id="insertSelective" parameterType="com.woniu.woniuticket.order.pojo.Order">
     insert into order
@@ -56,6 +79,9 @@
       </if>
       <if test="chipId != null">
         chip_id,
+      </if>
+      <if test="filmNum != null">
+        film_num,
       </if>
       <if test="pipeNum != null">
         pipe_num,
@@ -92,6 +118,9 @@
       <if test="chipId != null">
         #{chipId,jdbcType=INTEGER},
       </if>
+      <if test="filmNum != null">
+        #{filmNum,jdbcType=INTEGER},
+      </if>
       <if test="pipeNum != null">
         #{pipeNum,jdbcType=VARCHAR},
       </if>
@@ -127,6 +156,9 @@
       <if test="chipId != null">
         chip_id = #{chipId,jdbcType=INTEGER},
       </if>
+      <if test="filmNum != null">
+        film_num = #{filmNum,jdbcType=INTEGER},
+      </if>
       <if test="pipeNum != null">
         pipe_num = #{pipeNum,jdbcType=VARCHAR},
       </if>
@@ -158,6 +190,7 @@
     update order
     set user_id = #{userId,jdbcType=INTEGER},
       chip_id = #{chipId,jdbcType=INTEGER},
+      film_num = #{filmNum,jdbcType=INTEGER},
       pipe_num = #{pipeNum,jdbcType=VARCHAR},
       create_time = #{createTime,jdbcType=TIMESTAMP},
       seat = #{seat,jdbcType=VARCHAR},
@@ -172,6 +205,7 @@
     update order
     set user_id = #{userId,jdbcType=INTEGER},
       chip_id = #{chipId,jdbcType=INTEGER},
+      film_num = #{filmNum,jdbcType=INTEGER},
       pipe_num = #{pipeNum,jdbcType=VARCHAR},
       create_time = #{createTime,jdbcType=TIMESTAMP},
       seat = #{seat,jdbcType=VARCHAR},

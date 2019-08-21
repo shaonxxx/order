@@ -1,7 +1,5 @@
 server:
   port: 8080
-  servlet:
-    context-path: /
 spring:
   mvc:
     date-format: yyyy-MM-dd HH:mm:ss
@@ -44,3 +42,19 @@ pagehelper:
   helper-dialect: mysql
   support-methods-arguments: true
   params: pageNum=currentPage,pageSize=pageSize
+#swagger配置
+swagger:
+  enable: true
+
+# order微服务配置
+  application:
+    name: order
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  cloud:
+    config:
+      discovery:
+        service-id: config
+        enabled: true

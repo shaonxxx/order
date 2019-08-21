@@ -1,15 +1,18 @@
-package com.woniu.woniuticket.order.pojo;
+package com.woniu.woniuticket.order.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class Order {
+/**
+ * 响应回前端的订单数据传输对象
+ */
+public class ResultOrderDTO implements Serializable {
+
     private Integer orderId;
 
     private Integer userId;
 
     private Integer chipId;
-
-    private Integer filmNum;
 
     private String pipeNum;
 
@@ -19,13 +22,30 @@ public class Order {
 
     private String proof;
 
-    private Double totalPrice;
+    private Long totalPrice;
 
     private String orderNum;
 
     private Integer orderState;
 
     private String orderQrcode;
+
+    public ResultOrderDTO() {
+    }
+
+    public ResultOrderDTO(Integer orderId, Integer userId, Integer chipId, String pipeNum, Date createTime, String seat, String proof, Long totalPrice, String orderNum, Integer orderState, String orderQrcode) {
+        this.orderId = orderId;
+        this.userId = userId;
+        this.chipId = chipId;
+        this.pipeNum = pipeNum;
+        this.createTime = createTime;
+        this.seat = seat;
+        this.proof = proof;
+        this.totalPrice = totalPrice;
+        this.orderNum = orderNum;
+        this.orderState = orderState;
+        this.orderQrcode = orderQrcode;
+    }
 
     public Integer getOrderId() {
         return orderId;
@@ -49,14 +69,6 @@ public class Order {
 
     public void setChipId(Integer chipId) {
         this.chipId = chipId;
-    }
-
-    public Integer getFilmNum() {
-        return filmNum;
-    }
-
-    public void setFilmNum(Integer filmNum) {
-        this.filmNum = filmNum;
     }
 
     public String getPipeNum() {
@@ -91,11 +103,11 @@ public class Order {
         this.proof = proof;
     }
 
-    public Double getTotalPrice() {
+    public Long getTotalPrice() {
         return totalPrice;
     }
 
-    public void setTotalPrice(Double totalPrice) {
+    public void setTotalPrice(Long totalPrice) {
         this.totalPrice = totalPrice;
     }
 
