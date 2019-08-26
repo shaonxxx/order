@@ -1,87 +1,72 @@
 package com.woniu.woniuticket.order.controller;
 
 import com.github.pagehelper.PageInfo;
-import com.woniu.woniuticket.order.pojo.Condition;
+import com.woniu.woniuticket.order.constant.SystemConstant;
+import com.woniu.woniuticket.order.dto.ResultDTO;
 import com.woniu.woniuticket.order.pojo.Order;
 import com.woniu.woniuticket.order.service.OrderService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 // 允许跨域访问
 @CrossOrigin
-@RequestMapping("/order")
-//@Api(tags = "订单管理接口")
+@Api(tags = "订单管理接口")
 public class OrderController {
 
     @Autowired
     private OrderService orderService;
-    @ApiOperation(value = "订单",notes = "按条件分页展示所有订单")
+
+    @ApiOperation(value = "查询订单",notes = "按条件分页展示所有已完成的订单")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "currentPage",value = "当前页数"),
             @ApiImplicitParam(name = "pageSize",value = "每页总条数"),
-            @ApiImplicitParam(name = "condition",value = "查询条件")
+            @ApiImplicitParam(name = "startDay",value = "条件开始日"),
+            @ApiImplicitParam(name = "endDay",value = "条件截止日"),
+            @ApiImplicitParam(name = "payType",value = "条件支付方式"),
+            @ApiImplicitParam(name = "orderState",value = "条件订单状态,1：待支付、2：已付款未观影、3：已观影、4：已退款、5：待评价、6：无效。"),
+            @ApiImplicitParam(name = "orderNum",value = "条件订单编号")
     })
     @GetMapping("/queryAllOrders")
     public Object queryAllOrders(@RequestParam(value = "currentPage",defaultValue = "1",required = false) Integer currentPage,
                                  @RequestParam(value = "pageSize",defaultValue = "10",required = false) Integer pageSize,
-                                 @RequestParam(value = "condition",required = false) Condition condition){
-        List<Order> orders = orderService.selectAllOrders(currentPage,pageSize,condition);
+                                 @RequestParam(value = "startDay",required = false) String startDay,
+                                 @RequestParam(value = "endDay",required = false) String endDay,
+                                 @RequestParam(value = "payType",required = false) String payType,
+                                 @RequestParam(value = "orderState",required = false) String orderState,
+                                 @RequestParam(value = "orderNum",required = false) String orderNum){
+        List<Order> orders = orderService.selectAllOrders(currentPage,pageSize,startDay,endDay,payType,orderState,orderNum);
         PageInfo<Order> pageInfo = new PageInfo<>(orders);
         return pageInfo;
     }
 
-    // 支付测试
-//    @Autowired
-//    private AlipayUtil alipayUtil;
-//
-//    @RequestMapping("/alipayMoney")
-//    public String payMoney(Order order) throws AlipayApiException {
-//        Order orders = new Order();
-//        orders.setOrderId(1);
-//        orders.setOrderNum("123321");
-//        orders.setTotalPrice(50L);
-//        String result = alipayUtil.alipay(orders.getOrderNum(), "电影票", orders.getTotalPrice().toString(), "没有描述");
-//        return result;
-//    }
-//
-//    @RequestMapping(value = "/save")
-//    public void getResponseInfo(HttpServletRequest request, String out_trade_no, String trade_no, String trade_status) throws AlipayApiException {
-//        //获取支付宝POST过来反馈信息
-//        Map<String, String> params = new HashMap<String, String>();
-//        Map<String, String[]> requestParams = request.getParameterMap();
-//        for (Iterator<String> iter = requestParams.keySet().iterator(); iter.hasNext(); ) {
-//            String name = (String) iter.next();
-//            String[] values = (String[]) requestParams.get(name);
-//            String valueStr = "";
-//            for (int i = 0; i < values.length; i++) {
-//                valueStr = (i == values.length - 1) ? valueStr + values[i]
-//                        : valueStr + values[i] + ",";
-//            }
-//            params.put(name, valueStr);
-//        }
-//        //调用SDK验证签名
-//        boolean signVerified = AlipaySignature.rsaCheckV1(params, AlipayConfig.alipay_public_key, AlipayConfig.charset, AlipayConfig.sign_type);
-//        if (signVerified) {//验证成功
-//            if (trade_status.equals("TRADE_SUCCESS")) {
-//                /**
-//                 *  如果交易完成，更新订单流水号，插入付款时间
-//                 */
-//                Order orders = new Order();
-//                orders.setOrderNum(out_trade_no);
-//                //插入流水号
-//                orders.setPipeNum(trade_no);
-//                // 修改付款状态(2:表示已付款)
-//                orders.setOrderState(2);
-//                orderService.updatePayInfor(orders);
-//                //注意：
-//                //付款完成后，支付宝系统发送该交易状态通知
-//            }
-//        }
-//    }
+    @ApiOperation(value = "生成订单",notes = "创建订单")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "order",value = "前端传过来的数据封装到Order对象"),
+    })
+    @RequestMapping("/createOrder")
+    public ResultDTO createOrder(Order order){
+        ResultDTO result = null;
+        order.setChipId(1002);
+        order.setUserId(1002);
+        order.setChipId(102);
+        order.setSeat("5,6");
+        order.setTotalPrice(new BigDecimal(35));
+        order.setCreateTime(new Date());
+        order.setOrderNum(UUID.randomUUID().toString().replace("-",""));
+        order.setOrderState(SystemConstant.ORDER_NO_PAY_STATE);
+        order.setCouponId(1001);
+        order.setPayType("支付宝");
+        result = orderService.createOrder(order);
+        return result;
+    }
 }

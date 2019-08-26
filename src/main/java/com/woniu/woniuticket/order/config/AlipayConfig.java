@@ -1,6 +1,5 @@
 package com.woniu.woniuticket.order.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
@@ -17,12 +16,11 @@ public class AlipayConfig {
     public static String alipay_public_key = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApvzlitp5J6svMw33OhUdnA/YjTtcGcc3CdfwDGMF2lRFwF34s4odlu93H9gv68NLSj/Aoi2/ZEWt8CgLSqCgYAC/O+Jbfe+cd5RrJixVP9zXWtEbj2rAciuoFQQLjljDM7qc+p9bCaTXrzijokNe4AZhKbMa0/dG3BMhWM8mzm2o2tcDS2NA/r9LiLisEPGjxx1YAc4Gkbkfmu33E1trgRVossQsEX50uwY9bwK/H4PAds2Vrc4HmRccHvHT9fIuw6PJwWAvtljEp4kBIUHf0du94QNznO415Kprr1hou+ml+UCuoIu0JBz0/lebkQbcHVhDzf+zo+iTNRLkDwEMIwIDAQAB";
 
     // 服务器异步通知页面路径  需http://格式的完整路径，不能加?id=123这类自定义参数，必须外网可以正常访问
-    @Value("${notifyUrl}")
-    public static String notify_url;
+    // @Value("${notifyUrl}")http://d2a53j.natappfree.cc
+    public static String notify_url = "http://gpy6uf.natappfree.cc/pay/save";
 
     // 页面跳转同步通知页面路径 需http://格式的完整路径，不能加?id=123这类自定义参数，必须外网可以正常访问
-    @Value("${returnUrl}")
-    public static String return_url;
+    public static String return_url  = "http://gpy6uf.natappfree.cc/success.html";
 
     // 签名方式
     public static String sign_type = "RSA2";

@@ -1,21 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.woniu.woniuticket.order.dao.OrderMapper">
-  <!--分页查询-->
-  <select id="selectAllOrders" resultMap="BaseResultMap">
-    select * from order
-    <!--<where>
-      <if test="condition != null and ''!=condition">
-        stdnum like concat('%',#{condition},'%') or zhname like concat('%',#{condition},'%')
-      </if>
-    </where>-->
+  <!--条件查询已完成订单-->
+  <select id="selectAllOrders" resultType="com.woniu.woniuticket.order.pojo.Order">
+    select order_id,user_id,`order`.chip_id,pipe_num,create_time,seat,
+    proof,total_price,order_num,pay_type,order_qrcode,coupon_id,
+    order_state,start_time,end_time from `order`,screening
+    where `order`.chip_id = screening.chip_id
+    <if test="startDay != null and '' != startDay">
+      and DATE_FORMAT(start_time,'%Y-%m-%d') &gt;= #{startDay}
+    </if>
+    <if test="endDay != null and '' != endDay">
+      and DATE_FORMAT(end_time,'%Y-%m-%d') &lt;= #{endDay}
+    </if>
+    <if test="payType != null and '' != payType">
+      and pay_type = #{payType}
+    </if>
+    <if test="orderState != null and '' != orderState">
+      and order_state = #{orderState}
+    </if>
+    <if test="orderNum != null and '' != orderNum">
+      and order_num = #{orderNum}
+    </if>
   </select>
-
-
-
-
-
-
+  <!--根据订单Id查询订单创建时间-->
+  <select id="selectCreateOrderTime" resultType="Date">
+    select create_time from `order` where order_id = #{orderId}
+  </select>
+  <!--根据订单Id将该订单改为无效订单(状态为6)-->
+  <update id="updateOrderStateByOrderId">
+    update `order` set order_state = #{orderDisableState} where order_id = #{orderId}
+  </update>
+  <!--更新订单信息(实际金额,二维码)-->
+  <update id="updateOrderByOrderId">
+    update `order` set total_price = #{realTotalPrice} where order_id = #{orderId}
+  </update>
+  <!--更新订单信息(二维码)-->
+  <update id="updateOrderQRCodeByOrderId">
+    update `order` set order_qrcode = #{qrCode} where order_id = #{orderId}
+  </update>
+  <!--通过订单编号,更新订单状态-->
+  <update id="updateOrderInfo">
+    update `order` set pipe_num = #{pipeNum},order_state = #{orderState},proof = #{proof} where order_num = #{orderNum}
+  </update>
+  <!--根据订单编号查询出订单id-->
+  <select id="selectOrderIdByOrderNum" resultType="int">
+    select order_id from `order` where order_num = #{orderNum}
+  </select>
+  <!--根据订单编号查询该订单-->
+  <select id="selectOrderStateByOrderNum" resultType="com.woniu.woniuticket.order.pojo.Order">
+    select order_id,user_id,`order`.chip_id,pipe_num,create_time,seat,
+    proof,total_price,order_num,pay_type,order_qrcode,coupon_id,
+    order_state,film_num,start_time,end_time from `order`,screening
+    where `order`.chip_id = screening.chip_id and order_num = #{orderNum}
+  </select>
+  <!--通过订单Id修改退款订单状态(4:已退款)-->
+  <update id="updateOrderStateByOrderNum">
+    update `order` set order_state = #{orderRefundMoneyState} where order_num = #{orderNum}
+  </update>
+  <!--查询数据库订单状态为2的订单(已付款未观影)-->
+  <select id="selectOrderByOrderState" resultType="com.woniu.woniuticket.order.pojo.Order">
+    select order_id,user_id,`order`.chip_id,pipe_num,create_time,seat,
+    proof,total_price,order_num,pay_type,order_qrcode,coupon_id,
+    order_state,film_num,start_time,end_time from `order`,screening
+    where `order`.chip_id = screening.chip_id and order_state = #{orderNoWatchState}
+  </select>
+  <!--将订单状态改为3(已观影状态)-->
+  <update id="updateWatchedOrderStateByOrderId">
+    update `order` set order_state = #{orderWatchedState} where order_id = #{orderId}
+  </update>
+  <!--修改代金券状态-->
+  <update id="updateCouponStateByCouponId">
+    update coupon
+      <trim prefix="set" suffixOverrides=",">
+        <if test="couponState == 0 ">state = #{couponState},</if>
+        <if test="couponState == 1 ">state = #{couponState},</if>
+        <if test="couponState == 2 ">state = #{couponState},</if>
+        <if test="couponState == 3 ">state = #{couponState},</if>
+      </trim>
+    where coupon_id = #{couponId}
+  </update>
+  <!--根据订单中代金券Id,查询出代金券金额-->
+  <select id="selectCouponPriceById" resultType="Double">
+    select amount from coupon where coupon_id = #{couponId}
+  </select>
+  <!--根据代金券Id查询出代金券对象-->
+  <select id="selectCouponByCouponId" resultType="com.woniu.woniuticket.order.pojo.Coupon">
+    select coupon_id,user_id,amount,active_time,state from coupon where coupon_id = #{couponId}
+  </select>
 
 
 
@@ -25,7 +97,6 @@
     <id column="order_id" jdbcType="INTEGER" property="orderId" />
     <result column="user_id" jdbcType="INTEGER" property="userId" />
     <result column="chip_id" jdbcType="INTEGER" property="chipId" />
-    <result column="film_num" jdbcType="INTEGER" property="filmNum" />
     <result column="pipe_num" jdbcType="VARCHAR" property="pipeNum" />
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
     <result column="seat" jdbcType="VARCHAR" property="seat" />
@@ -33,13 +104,16 @@
     <result column="total_price" jdbcType="DECIMAL" property="totalPrice" />
     <result column="order_num" jdbcType="VARCHAR" property="orderNum" />
     <result column="order_state" jdbcType="INTEGER" property="orderState" />
+    <result column="pay_type" jdbcType="VARCHAR" property="payType" />
+    <result column="film_num" jdbcType="INTEGER" property="filmNum" />
+    <result column="coupon_id" jdbcType="INTEGER" property="couponId" />
   </resultMap>
   <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.woniu.woniuticket.order.pojo.Order">
     <result column="order_qrcode" jdbcType="LONGVARCHAR" property="orderQrcode" />
   </resultMap>
   <sql id="Base_Column_List">
-    order_id, user_id, chip_id, film_num, pipe_num, create_time, seat, proof, total_price, 
-    order_num, order_state
+    order_id, user_id, chip_id, pipe_num, create_time, seat, proof, total_price, order_num, 
+    order_state, pay_type, film_num, coupon_id
   </sql>
   <sql id="Blob_Column_List">
     order_qrcode
@@ -49,27 +123,27 @@
     <include refid="Base_Column_List" />
     ,
     <include refid="Blob_Column_List" />
-    from order
+    from `order`
     where order_id = #{orderId,jdbcType=INTEGER}
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
-    delete from order
+    delete from `order`
     where order_id = #{orderId,jdbcType=INTEGER}
   </delete>
   <insert id="insert" parameterType="com.woniu.woniuticket.order.pojo.Order">
-    insert into order (order_id, user_id, chip_id, 
-      film_num, pipe_num, create_time, 
-      seat, proof, total_price, 
-      order_num, order_state, order_qrcode
-      )
+    insert into `order` (order_id, user_id, chip_id,
+      pipe_num, create_time, seat, 
+      proof, total_price, order_num, 
+      order_state, pay_type, film_num, 
+      coupon_id, order_qrcode)
     values (#{orderId,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{chipId,jdbcType=INTEGER}, 
-      #{filmNum,jdbcType=INTEGER}, #{pipeNum,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
-      #{seat,jdbcType=VARCHAR}, #{proof,jdbcType=VARCHAR}, #{totalPrice,jdbcType=DECIMAL}, 
-      #{orderNum,jdbcType=VARCHAR}, #{orderState,jdbcType=INTEGER}, #{orderQrcode,jdbcType=LONGVARCHAR}
-      )
+      #{pipeNum,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{seat,jdbcType=VARCHAR}, 
+      #{proof,jdbcType=VARCHAR}, #{totalPrice,jdbcType=DECIMAL}, #{orderNum,jdbcType=VARCHAR}, 
+      #{orderState,jdbcType=INTEGER}, #{payType,jdbcType=VARCHAR}, #{filmNum,jdbcType=INTEGER}, 
+      #{couponId,jdbcType=INTEGER}, #{orderQrcode,jdbcType=LONGVARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="com.woniu.woniuticket.order.pojo.Order">
-    insert into order
+    insert into `order`
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="orderId != null">
         order_id,
@@ -79,9 +153,6 @@
       </if>
       <if test="chipId != null">
         chip_id,
-      </if>
-      <if test="filmNum != null">
-        film_num,
       </if>
       <if test="pipeNum != null">
         pipe_num,
@@ -104,6 +175,15 @@
       <if test="orderState != null">
         order_state,
       </if>
+      <if test="payType != null">
+        pay_type,
+      </if>
+      <if test="filmNum != null">
+        film_num,
+      </if>
+      <if test="couponId != null">
+        coupon_id,
+      </if>
       <if test="orderQrcode != null">
         order_qrcode,
       </if>
@@ -117,9 +197,6 @@
       </if>
       <if test="chipId != null">
         #{chipId,jdbcType=INTEGER},
-      </if>
-      <if test="filmNum != null">
-        #{filmNum,jdbcType=INTEGER},
       </if>
       <if test="pipeNum != null">
         #{pipeNum,jdbcType=VARCHAR},
@@ -142,22 +219,31 @@
       <if test="orderState != null">
         #{orderState,jdbcType=INTEGER},
       </if>
+      <if test="payType != null">
+        #{payType,jdbcType=VARCHAR},
+      </if>
+      <if test="filmNum != null">
+        #{filmNum,jdbcType=INTEGER},
+      </if>
+      <if test="couponId != null">
+        #{couponId,jdbcType=INTEGER},
+      </if>
       <if test="orderQrcode != null">
         #{orderQrcode,jdbcType=LONGVARCHAR},
       </if>
     </trim>
+    <selectKey keyColumn="order_id" keyProperty="orderId" order="AFTER" resultType="int">
+      select last_insert_id()
+    </selectKey>
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.woniu.woniuticket.order.pojo.Order">
-    update order
+    update `order`
     <set>
       <if test="userId != null">
         user_id = #{userId,jdbcType=INTEGER},
       </if>
       <if test="chipId != null">
         chip_id = #{chipId,jdbcType=INTEGER},
-      </if>
-      <if test="filmNum != null">
-        film_num = #{filmNum,jdbcType=INTEGER},
       </if>
       <if test="pipeNum != null">
         pipe_num = #{pipeNum,jdbcType=VARCHAR},
@@ -180,6 +266,15 @@
       <if test="orderState != null">
         order_state = #{orderState,jdbcType=INTEGER},
       </if>
+      <if test="payType != null">
+        pay_type = #{payType,jdbcType=VARCHAR},
+      </if>
+      <if test="filmNum != null">
+        film_num = #{filmNum,jdbcType=INTEGER},
+      </if>
+      <if test="couponId != null">
+        coupon_id = #{couponId,jdbcType=INTEGER},
+      </if>
       <if test="orderQrcode != null">
         order_qrcode = #{orderQrcode,jdbcType=LONGVARCHAR},
       </if>
@@ -187,10 +282,9 @@
     where order_id = #{orderId,jdbcType=INTEGER}
   </update>
   <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.woniu.woniuticket.order.pojo.Order">
-    update order
+    update `order`
     set user_id = #{userId,jdbcType=INTEGER},
       chip_id = #{chipId,jdbcType=INTEGER},
-      film_num = #{filmNum,jdbcType=INTEGER},
       pipe_num = #{pipeNum,jdbcType=VARCHAR},
       create_time = #{createTime,jdbcType=TIMESTAMP},
       seat = #{seat,jdbcType=VARCHAR},
@@ -198,21 +292,26 @@
       total_price = #{totalPrice,jdbcType=DECIMAL},
       order_num = #{orderNum,jdbcType=VARCHAR},
       order_state = #{orderState,jdbcType=INTEGER},
+      pay_type = #{payType,jdbcType=VARCHAR},
+      film_num = #{filmNum,jdbcType=INTEGER},
+      coupon_id = #{couponId,jdbcType=INTEGER},
       order_qrcode = #{orderQrcode,jdbcType=LONGVARCHAR}
     where order_id = #{orderId,jdbcType=INTEGER}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.woniu.woniuticket.order.pojo.Order">
-    update order
+    update `order`
     set user_id = #{userId,jdbcType=INTEGER},
       chip_id = #{chipId,jdbcType=INTEGER},
-      film_num = #{filmNum,jdbcType=INTEGER},
       pipe_num = #{pipeNum,jdbcType=VARCHAR},
       create_time = #{createTime,jdbcType=TIMESTAMP},
       seat = #{seat,jdbcType=VARCHAR},
       proof = #{proof,jdbcType=VARCHAR},
       total_price = #{totalPrice,jdbcType=DECIMAL},
       order_num = #{orderNum,jdbcType=VARCHAR},
-      order_state = #{orderState,jdbcType=INTEGER}
+      order_state = #{orderState,jdbcType=INTEGER},
+      pay_type = #{payType,jdbcType=VARCHAR},
+      film_num = #{filmNum,jdbcType=INTEGER},
+      coupon_id = #{couponId,jdbcType=INTEGER}
     where order_id = #{orderId,jdbcType=INTEGER}
   </update>
 </mapper>

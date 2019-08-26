@@ -1,5 +1,6 @@
 package com.woniu.woniuticket.order.pojo;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 public class Order {
@@ -9,8 +10,6 @@ public class Order {
 
     private Integer chipId;
 
-    private Integer filmNum;
-
     private String pipeNum;
 
     private Date createTime;
@@ -19,13 +18,39 @@ public class Order {
 
     private String proof;
 
-    private Double totalPrice;
+    private BigDecimal totalPrice;
 
     private String orderNum;
 
     private Integer orderState;
 
+    private String payType;
+
+    private Integer filmNum;
+
+    private Integer couponId;
+
     private String orderQrcode;
+
+    private Date startTime;
+
+    private Date endTime;
+
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Date startTime) {
+        this.startTime = startTime;
+    }
+
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
+    }
 
     public Integer getOrderId() {
         return orderId;
@@ -49,14 +74,6 @@ public class Order {
 
     public void setChipId(Integer chipId) {
         this.chipId = chipId;
-    }
-
-    public Integer getFilmNum() {
-        return filmNum;
-    }
-
-    public void setFilmNum(Integer filmNum) {
-        this.filmNum = filmNum;
     }
 
     public String getPipeNum() {
@@ -91,11 +108,11 @@ public class Order {
         this.proof = proof;
     }
 
-    public Double getTotalPrice() {
+    public BigDecimal getTotalPrice() {
         return totalPrice;
     }
 
-    public void setTotalPrice(Double totalPrice) {
+    public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
     }
 
@@ -115,11 +132,57 @@ public class Order {
         this.orderState = orderState;
     }
 
+    public String getPayType() {
+        return payType;
+    }
+
+    public void setPayType(String payType) {
+        this.payType = payType;
+    }
+
+    public Integer getFilmNum() {
+        return filmNum;
+    }
+
+    public void setFilmNum(Integer filmNum) {
+        this.filmNum = filmNum;
+    }
+
+    public Integer getCouponId() {
+        return couponId;
+    }
+
+    public void setCouponId(Integer couponId) {
+        this.couponId = couponId;
+    }
+
     public String getOrderQrcode() {
         return orderQrcode;
     }
 
     public void setOrderQrcode(String orderQrcode) {
         this.orderQrcode = orderQrcode;
+    }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "orderId=" + orderId +
+                ", userId=" + userId +
+                ", chipId=" + chipId +
+                ", pipeNum='" + pipeNum + '\'' +
+                ", createTime=" + createTime +
+                ", seat='" + seat + '\'' +
+                ", proof='" + proof + '\'' +
+                ", totalPrice=" + totalPrice +
+                ", orderNum='" + orderNum + '\'' +
+                ", orderState=" + orderState +
+                ", payType='" + payType + '\'' +
+                ", filmNum=" + filmNum +
+                ", couponId=" + couponId +
+                ", orderQrcode='" + orderQrcode + '\'' +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                '}';
     }
 }

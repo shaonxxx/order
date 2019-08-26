@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>退款测试</title>
+</head>
+<body>
+    <form action="/pay/refund" method="post">
+        订单编号:<input type="text" name="out_trade_no">
+        支付宝交易号:<input type="text" name="trade_no">
+        退款金额:<input type="text" name="refund_amount">
+        退款原因:<input type="text" name="refund_reason">
+        退款请求:<input type="text" name="out_request_no">
+        <input type="submit" value="退款">
+    </form>
+</body>
+</html>

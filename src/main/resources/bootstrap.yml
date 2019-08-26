@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 3333
 spring:
   mvc:
     date-format: yyyy-MM-dd HH:mm:ss
@@ -8,10 +8,10 @@ spring:
     time-zone: GMT+8
   #JDBC参数
   datasource:
-    url: jdbc:mysql://106.52.231.180:3306/cinema?serverTimezone=GMT%2B8
+    url: jdbc:mysql://localhost:3306/cinema?serverTimezone=GMT%2B8
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: 123
+    password: 123456
     #druid连接池配置
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
@@ -29,6 +29,19 @@ spring:
   #thymeleaf缓存
   thymeleaf:
     cache: false
+  #微服务名称
+  application:
+    name: order
+  #redis配置
+  redis:
+    host: localhost
+    port: 6379
+    jedis:
+      pool:
+        max-active: 100
+        max-idle: 100
+        max-wait: 1000ms
+        min-idle: 10
 #mybatis映射文件配置
 mybatis:
   mapper-locations: /mapper/*.xml
@@ -36,7 +49,7 @@ mybatis:
     map-underscore-to-camel-case: true
 #logback日志
 logging:
-  level.com.woniu.dao: debug
+  level.com.woniu.woniuticket.order.dao: debug
 #pagehelper配置
 pagehelper:
   helper-dialect: mysql
@@ -47,14 +60,19 @@ swagger:
   enable: true
 
 # order微服务配置
-  application:
-    name: order
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://106.52.231.180:8761/eureka
+  instance:
+    hostname: c263f04257.zicp.vip:20321
+    ip-address: c263f04257.zicp.vip:20321
+    status-page-url: http://c263f04257.zicp.vip:20321
+    instance-id: http://c263f04257.zicp.vip:20321
   cloud:
     config:
       discovery:
         service-id: config
         enabled: true
+      profile: dev
+
