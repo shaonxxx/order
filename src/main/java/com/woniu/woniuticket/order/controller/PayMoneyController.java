@@ -19,10 +19,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -60,13 +57,14 @@ public class PayMoneyController {
      * @throws AlipayApiException
      */
     @ApiOperation(value = "付款",notes = "订单状态为1(待支付)才能付款")
-    @RequestMapping("/alipayMoney")
+    @GetMapping("/alipayMoney")
     public String payMoney(Integer orderId) throws AlipayApiException {
         return orderService.payMoney(orderId);
     }
 
     // 付款成功异步回调
-    @RequestMapping(value = "/save")
+    @ApiOperation(value = "付款成功异步回调(自动调用,不需要手动调用)",notes = "返回结果包含订单号,支付宝交易号,交易状态等")
+    @PostMapping(value = "/save")
     public void getResponseInfo(HttpServletRequest request, String out_trade_no, String trade_no, String trade_status) throws AlipayApiException {
         //获取支付宝POST过来反馈信息
         Map<String, String> params = new HashMap<String, String>();
@@ -85,6 +83,7 @@ public class PayMoneyController {
         boolean signVerified = AlipaySignature.rsaCheckV1(params, AlipayConfig.alipay_public_key, AlipayConfig.charset, AlipayConfig.sign_type);
         if (signVerified) {//验证成功
             if (trade_status.equals("TRADE_SUCCESS")) {
+                System.out.println("+++++++++++++++++++++++++++++++");
                 // 如果交易完成，更新订单状态
                 orderService.modifyOrder(out_trade_no);
                 // (根据订单编号查询订单id)
@@ -115,12 +114,11 @@ public class PayMoneyController {
      * @throws AlipayApiException
      * @throws IOException
      */
-    @ApiOperation(value = "订单", notes = "退款")
+    @ApiOperation(value = "退款", notes = "退款")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "orders", value = "订单号")
+            @ApiImplicitParam(name = "requestDTO", value = "退款请求封装对象(订单号,支付宝交易号,退款金额,退款原因,标识一次退款请求)")
     })
     @PostMapping(value = "refund")
-//    @RequestMapping("/refund")
     public ResultDTO refund(AlipayRefundRequestDTO requestDTO) throws AlipayApiException, IOException {
         ResultDTO resultDTO = new ResultDTO();
         //退款时，前端需要将订单号或者支付宝交易号传到后台

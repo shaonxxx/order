@@ -11,7 +11,7 @@ public interface OrderService {
     // 条件查询所有已完成订单
     List<Order> selectAllOrders(Integer currentPage, Integer pageSize, String startDay, String endDay, String payType, String orderState, String orderNum);
     // 创建订单
-    ResultDTO createOrder(Order order);
+    // ResultDTO createOrder(Order order);
     // 付款
     String payMoney(Integer orderId) throws AlipayApiException;
     // 通过订单编号,更新订单状态
@@ -28,4 +28,6 @@ public interface OrderService {
     Integer updateCouponStateByCouponId(Integer couponCanUseState, Integer couponId);
     // 付款成功,修改订单信息
     Integer modifyOrder(String out_trade_no);
+    // 将生成的订单投递到MQ队列中
+    ResultDTO sendOrderToQueue(Order order);
 }

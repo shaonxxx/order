@@ -52,4 +52,6 @@ public interface OrderMapper {
     List<Order> selectOrderByOrderState(Integer orderNoWatchState);
     // 将订单状态改为3(已观影状态)
     int updateWatchedOrderStateByOrderId(@Param("orderWatchedState") Integer orderWatchedState,@Param("orderId") Integer orderId);
+    // 代金券不可用修改订单状态为6
+    int modifyOrderState(@Param("orderId") Integer orderId, @Param("orderState") Integer orderState);
 }

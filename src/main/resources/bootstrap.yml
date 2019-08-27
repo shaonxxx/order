@@ -42,6 +42,18 @@ spring:
         max-idle: 100
         max-wait: 1000ms
         min-idle: 10
+  # RabbitMQ配置
+  rabbitmq:
+    host: localhost
+    virtual-host: /order
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        acknowledge-mode: manual # 手动编程的方式来接收消息
+        prefetch: 20
+        concurrency: 10
 #mybatis映射文件配置
 mybatis:
   mapper-locations: /mapper/*.xml
@@ -63,10 +75,10 @@ swagger:
 eureka:
   client:
     service-url:
-      defaultZone: http://106.52.231.180:8761/eureka
+      defaultZone: http://106.52.231.180:8761/eureka,http://106.52.231.180:8762/eureka
   instance:
-    hostname: c263f04257.zicp.vip:20321
-    ip-address: c263f04257.zicp.vip:20321
+    hostname: http://c263f04257.zicp.vip:20321
+    ip-address: http://c263f04257.zicp.vip:20321
     status-page-url: http://c263f04257.zicp.vip:20321
     instance-id: http://c263f04257.zicp.vip:20321
   cloud:
@@ -75,4 +87,8 @@ eureka:
         service-id: config
         enabled: true
       profile: dev
+ribbon:
+  ConnectTimeout: 10000
+  ReadTimeout: 10000
+
 

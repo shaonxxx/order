@@ -1,6 +1,7 @@
 package com.woniu.woniuticket.order.service.impl;
 
 import com.alipay.api.AlipayApiException;
+import com.rabbitmq.client.Channel;
 import com.woniu.woniuticket.order.constant.SystemConstant;
 import com.woniu.woniuticket.order.dao.OrderMapper;
 import com.woniu.woniuticket.order.dto.ResultDTO;
@@ -10,15 +11,23 @@ import com.woniu.woniuticket.order.pojo.Order;
 import com.woniu.woniuticket.order.service.OrderService;
 import com.woniu.woniuticket.order.utils.AlipayUtil;
 import com.woniu.woniuticket.order.utils.QRCodeUtil.QRCodeUtil;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.rabbit.annotation.*;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.messaging.handler.annotation.Headers;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -33,12 +42,16 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private AlipayUtil alipayUtil;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
     // 条件查询所有已完成订单
     @Override
     public List<Order> selectAllOrders(Integer currentPage, Integer pageSize,String startDay,String endDay,String payType,String orderState,String orderNum) {
         return orderMapper.selectAllOrders(currentPage,pageSize,startDay,endDay,payType,orderState,orderNum);
     }
 
+    /*
     // 创建订单
     @Override
     @Transactional(propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT)
@@ -65,12 +78,66 @@ public class OrderServiceImpl implements OrderService {
             result.setData(null);
             return result;
         }
+    }*/
+    // 将生成的订单投递到MQ队列中(生产者)
+    @Override
+    public ResultDTO sendOrderToQueue(Order order) {
+        ResultDTO result = new ResultDTO();
+        try {
+            rabbitTemplate.convertAndSend("order-exchange",null,order);
+            result.setCode(200);
+            result.setMessage("订单创建成功!");
+            result.setData(order);
+            return result;
+        } catch (AmqpException e) {
+            e.printStackTrace();
+            result.setCode(500);
+            result.setMessage("订单创建失败!");
+            result.setData(null);
+            return result;
+        }
+    }
+
+    // 消费者(创建订单)
+    @RabbitListener(
+            bindings = {
+                    @QueueBinding(
+                            value = @Queue(name = "order-queue",autoDelete = "false",durable = "false"),
+                            exchange = @Exchange(name = "order-exchange",type = "fanout")
+                    )
+            }
+    )
+    @RabbitHandler
+    @Transactional(propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT)
+    public void saveOrder(@Payload Order order, Channel channel, @Headers Map header) {
+        // 将订单添加到数据库
+        Long tag = (Long) header.get(AmqpHeaders.DELIVERY_TAG);
+        try {
+            channel.basicAck(tag,false);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        int row = orderMapper.insertSelective(order);
+        // 当前插入订单的id
+        int orderId = order.getOrderId();
+        // 查询出当前插入的订单
+        Order currentOrder = orderMapper.selectByPrimaryKey(orderId);
+        System.out.println("------->"+orderId);
+        if (row > 0){
+            // 将订单放入Redis中
+            redisTemplate.opsForValue().set("orderId:"+orderId,currentOrder);
+            // 设置订单有效时间10分钟
+            redisTemplate.expire("orderId:"+orderId,10, TimeUnit.MINUTES);
+        }else {
+            throw new OrderException("订单创建失败!");
+        }
     }
 
     // 付款
     @Override
     public String payMoney(Integer orderId) throws AlipayApiException {
-        orderId = 39;
+        orderId = 56;
         String result = null;
         // 从Redis中根据订单id取出订单信息
         Order redisOrder = (Order) redisTemplate.opsForValue().get("orderId:"+orderId);
@@ -82,7 +149,7 @@ public class OrderServiceImpl implements OrderService {
         if (payMoneyTime.getTime() - createOrderTime.getTime() > (10*60*1000)){
             // 根据订单Id将该订单改为无效订单(状态为6)
             orderMapper.updateOrderStateByOrderId(SystemConstant.ORDER_DISABLE_STATE,orderId);
-            result = "订单已过期!";
+            result = "订单已过期,请重新下单";
             // 从Redis中删除该条订单信息
             redisTemplate.delete("orderId:"+orderId);
             return result;
@@ -97,14 +164,22 @@ public class OrderServiceImpl implements OrderService {
                     if (row <= 0){
                         throw new OrderException("代金券状态修改失败!");
                     }
-                    result = "请在有效时间内使用代金券";
+                    // 修改当前订单状态为无效6
+                    orderMapper.modifyOrderState(orderId,SystemConstant.ORDER_DISABLE_STATE);
+                    result = "请重新下单,在有效时间内使用代金券";
+                    return result;
+                }
+                // 代金券状态不为0,不可以使用
+                if (coupon.getState() != SystemConstant.COUPON_CAN_USE_STATE){
+                    result = "代金券不可用,请重新下单";
+                    // 将当前订单修改为无效状态
+                    int row = orderMapper.modifyOrderState(orderId,SystemConstant.ORDER_DISABLE_STATE);
+                    if (row <= 0){
+                        throw new OrderException("订单状态修改为无效失败!");
+                    }
                     return result;
                 }
                 // 代金券状态为0,可以使用
-                if (coupon.getState() != SystemConstant.COUPON_CAN_USE_STATE){
-                    result = "代金券不可用!";
-                    return result;
-                }
                 // 根据订单中代金券Id,查询出代金券金额
                 Double couponPrice = orderMapper.selectCouponPriceById(redisOrder.getCouponId());
                 // 计算实际付款金额
@@ -123,7 +198,6 @@ public class OrderServiceImpl implements OrderService {
                 // 用户没有选择使用代金券
                 // 付款
                 result = alipayUtil.alipay(redisOrder.getOrderNum(), "电影票",redisOrder.getTotalPrice().toString(), "没有描述");
-                System.out.println("======"+result);
                 return result;
             }
         }
@@ -156,11 +230,13 @@ public class OrderServiceImpl implements OrderService {
         Coupon coupon = orderMapper.selectCouponByCouponId(order.getCouponId());
         // 更改代金券状态(已使用)
         int couponStateRow = orderMapper.updateCouponStateByCouponId(SystemConstant.COUPON_IS_USE_STATE, coupon.getCouponId());
+        System.out.println(couponStateRow+"======");
         if (couponStateRow <= 0) {
             throw new OrderException("代金券状态修改失败!");
         }
         return null;
     }
+
 
     // 通过订单编号,更新订单状态
     @Override

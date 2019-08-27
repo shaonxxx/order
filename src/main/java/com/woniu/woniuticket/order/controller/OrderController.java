@@ -26,7 +26,7 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    @ApiOperation(value = "查询订单",notes = "按条件分页展示所有已完成的订单")
+    @ApiOperation(value = "查询所有订单(可以带条件)",notes = "按条件分页展示所有已完成的订单")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "currentPage",value = "当前页数"),
             @ApiImplicitParam(name = "pageSize",value = "每页总条数"),
@@ -53,7 +53,7 @@ public class OrderController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "order",value = "前端传过来的数据封装到Order对象"),
     })
-    @RequestMapping("/createOrder")
+    @GetMapping("/createOrder")
     public ResultDTO createOrder(Order order){
         ResultDTO result = null;
         order.setChipId(1002);
@@ -66,7 +66,9 @@ public class OrderController {
         order.setOrderState(SystemConstant.ORDER_NO_PAY_STATE);
         order.setCouponId(1001);
         order.setPayType("支付宝");
-        result = orderService.createOrder(order);
+        //result = orderService.createOrder(order);
+        // 生成订单(将订单数据投递到MQ队列中)
+        result = orderService.sendOrderToQueue(order);
         return result;
     }
 }

@@ -88,6 +88,19 @@
   <select id="selectCouponByCouponId" resultType="com.woniu.woniuticket.order.pojo.Coupon">
     select coupon_id,user_id,amount,active_time,state from coupon where coupon_id = #{couponId}
   </select>
+  <!--代金券不可用修改订单状态为6-->
+  <update id="modifyOrderState">
+    update `order`
+    <trim prefix="set" suffixOverrides=",">
+      <if test="orderState == 1 ">order_state = #{orderState},</if>
+      <if test="orderState == 2 ">order_state = #{orderState},</if>
+      <if test="orderState == 3 ">order_state = #{orderState},</if>
+      <if test="orderState == 4 ">order_state = #{orderState},</if>
+      <if test="orderState == 5 ">order_state = #{orderState},</if>
+      <if test="orderState == 6 ">order_state = #{orderState},</if>
+    </trim>
+  where order_id = #{orderId}
+  </update>
 
 
 
